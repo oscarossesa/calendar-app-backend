@@ -1,32 +1,32 @@
 const { response } = require('express')
 const bcrypt = require('bcryptjs')
 const { validationResult } = require('express-validator')
-const User = require('../models/User')
 const { generateJWT } = require('../helpers/jwt')
+const User = require('../models/User')
 
 const createUser = async (req, res = response) => {
 
   const { email, password } = req.body
 
   try {
-    
-    let user = await  User.findOne({ email })
+
+    let user = await User.findOne({ email })
 
     if (user) {
       return res.status(400).json({
-        ok:false,
+        ok: false,
         msg: 'Un usuario ya existe con ese correo'
       })
     }
-    
+
     user = new User(req.body)
-    
+
     // encript pass
     const salt = bcrypt.genSaltSync()
     user.password = bcrypt.hashSync(password, salt)
 
     await user.save()
-    
+
     // generate JWT
     const token = await generateJWT(user.id, user.name)
 
@@ -36,7 +36,7 @@ const createUser = async (req, res = response) => {
       name: user.name,
       token
     })
-    
+
   } catch (error) {
 
     console.log(error)
@@ -54,12 +54,12 @@ const userLogin = async (req, res = response) => {
   const { email, password } = req.body
 
   try {
-    
+
     const user = await User.findOne({ email })
 
     if (!user) {
       return res.status(400).json({
-        ok:false,
+        ok: false,
         msg: 'Usuario no existe'
       })
     }
@@ -82,18 +82,18 @@ const userLogin = async (req, res = response) => {
       uid: user.id,
       name: user.name,
       token
-    })  
+    })
 
   } catch (error) {
-    
+
     console.log(error)
     res.status(500).json({
       ok: false,
       msg: 'Por favor hable con el administrador'
     })
 
-  } 
-  
+  }
+
 }
 
 const refreshToken = async (req, res = response) => {
